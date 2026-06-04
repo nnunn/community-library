@@ -1,0 +1,633 @@
+
+raw
+Index · HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Boyle Street Community Library</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500&display=swap');
+ 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  :root {
+    --cream: #F7F3EE;
+    --paper: #FBF8F4;
+    --ink: #1C1810;
+    --ink-mid: #5C5448;
+    --ink-light: #9C9488;
+    --rule: #E0D8CF;
+    --green: #2D5A3D;
+    --green-light: #EBF3EE;
+    --amber: #B8650A;
+    --amber-light: #FDF3E7;
+    --red: #8B2020;
+    --red-light: #FAECEC;
+    --radius: 6px;
+  }
+ 
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+ 
+  /* ── Login ── */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  .login-box {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+  }
+  .login-box .logo { font-family: 'Lora', serif; font-size: 22px; margin-bottom: 4px; }
+  .login-box .tagline { font-size: 13px; color: var(--ink-mid); margin-bottom: 2rem; }
+  .login-box input { width: 100%; margin-bottom: 12px; text-align: center; letter-spacing: 2px; }
+  .login-error { font-size: 13px; color: var(--red); margin-top: 8px; display: none; }
+ 
+  /* ── App shell ── */
+  #app { display: none; }
+ 
+  header {
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-title { font-family: 'Lora', serif; font-size: 18px; }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+ 
+  main { max-width: 720px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+ 
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--rule);
+    border-radius: var(--radius);
+    padding: 3px;
+    margin-bottom: 1.5rem;
+  }
+  .tab {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 7px 12px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    color: var(--ink-mid);
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .tab.active {
+    background: var(--paper);
+    color: var(--ink);
+    font-weight: 500;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+ 
+  /* ── Panels ── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+ 
+  /* ── Forms ── */
+  .field { margin-bottom: 14px; }
+  label { display: block; font-size: 12px; font-weight: 500; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
+  input[type=text], input[type=password], select, textarea {
+    width: 100%;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--green); }
+  .row { display: flex; gap: 12px; }
+  .row .field { flex: 1; }
+ 
+  /* ── Buttons ── */
+  button {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    border: 1px solid var(--rule);
+    padding: 8px 16px;
+    background: var(--paper);
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  button:hover { background: var(--cream); }
+  button:active { transform: scale(0.98); }
+  .btn-primary { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn-primary:hover { background: #234a31; }
+  .btn-sm { padding: 5px 12px; font-size: 13px; }
+  .btn-danger { color: var(--red); border-color: transparent; background: none; }
+  .btn-danger:hover { background: var(--red-light); }
+ 
+  /* ── Search ── */
+  .search-wrap { position: relative; margin-bottom: 12px; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--ink-light); pointer-events: none; }
+  .search-wrap input { padding-left: 34px; }
+ 
+  /* ── Filter pills ── */
+  .filters { display: flex; gap: 6px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .pill {
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 13px;
+    color: var(--ink-mid);
+  }
+  .pill.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+ 
+  /* ── Book cards ── */
+  .book-list { display: flex; flex-direction: column; gap: 8px; }
+  .book-card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.15s;
+  }
+  .book-card:hover { border-color: #C8C0B7; }
+  .book-icon {
+    width: 36px;
+    height: 44px;
+    border-radius: 3px;
+    background: var(--green-light);
+    border-left: 4px solid var(--green);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Lora', serif;
+    font-size: 11px;
+    color: var(--green);
+    font-style: italic;
+  }
+  .book-icon.out { background: var(--amber-light); border-color: var(--amber); color: var(--amber); }
+  .book-info { flex: 1; min-width: 0; }
+  .book-title { font-family: 'Lora', serif; font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .book-author { font-size: 13px; color: var(--ink-mid); margin-top: 1px; }
+  .book-meta { font-size: 12px; color: var(--ink-light); margin-top: 2px; }
+  .book-status { margin-top: 4px; }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+  }
+  .badge-in { background: var(--green-light); color: var(--green); }
+  .badge-out { background: var(--amber-light); color: var(--amber); }
+  .book-actions { display: flex; gap: 6px; flex-shrink: 0; }
+ 
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--ink-light);
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 16px;
+  }
+ 
+  /* ── Result count ── */
+  .result-count { font-size: 13px; color: var(--ink-light); margin-bottom: 12px; }
+ 
+  /* ── Modal ── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(28,24,16,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 1rem;
+  }
+  .modal {
+    background: var(--paper);
+    border-radius: 10px;
+    padding: 1.75rem;
+    width: 100%;
+    max-width: 360px;
+    border: 1px solid var(--rule);
+  }
+  .modal h3 { font-family: 'Lora', serif; font-size: 18px; margin-bottom: 6px; }
+  .modal-subtitle { font-size: 13px; color: var(--ink-mid); margin-bottom: 1.25rem; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.25rem; }
+ 
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 13px;
+    padding: 9px 18px;
+    border-radius: 20px;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+ 
+  /* ── Loading ── */
+  .loading { text-align: center; padding: 2rem; color: var(--ink-light); font-size: 14px; }
+ 
+  /* ── Divider ── */
+  .section-divider { border: none; border-top: 1px solid var(--rule); margin: 1.5rem 0; }
+ 
+  @media (max-width: 480px) {
+    .row { flex-direction: column; gap: 0; }
+    .book-actions { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+ 
+<!-- ── CONFIG ── -->
+<script>
+  const SUPABASE_URL    = 'YOUR_PROJECT_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+  const APP_PASSWORD    = 'your-password-here';
+</script>
+ 
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="logo">📚 Community Library</div>
+    <div class="tagline">Boyle Street</div>
+    <div class="field">
+      <input type="password" id="pw-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')tryLogin()" />
+    </div>
+    <button class="btn-primary" style="width:100%" onclick="tryLogin()">Sign in</button>
+    <div class="login-error" id="login-error">Incorrect password — try again.</div>
+  </div>
+</div>
+ 
+<!-- ── APP ── -->
+<div id="app">
+  <header>
+    <span class="header-title">📚 Community Library</span>
+    <div class="header-actions">
+      <button class="btn-sm" onclick="signOut()">Sign out</button>
+    </div>
+  </header>
+ 
+  <main>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('browse', this)">Browse</button>
+      <button class="tab" onclick="switchTab('add', this)">Add book</button>
+      <button class="tab" onclick="switchTab('checkedout', this)">Checked out</button>
+    </div>
+ 
+    <!-- BROWSE -->
+    <div id="tab-browse" class="panel active">
+      <div class="search-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="search-input" placeholder="Search by title or author…" oninput="renderBooks()" />
+      </div>
+      <div class="filters">
+        <button class="pill active" onclick="setFilter('all', this)">All</button>
+        <button class="pill" onclick="setFilter('available', this)">Available</button>
+        <button class="pill" onclick="setFilter('out', this)">Checked out</button>
+      </div>
+      <div class="result-count" id="browse-count"></div>
+      <div class="book-list" id="book-list"><div class="loading">Loading books…</div></div>
+    </div>
+ 
+    <!-- ADD -->
+    <div id="tab-add" class="panel">
+      <div class="field">
+        <label>Title *</label>
+        <input type="text" id="add-title" placeholder="Book title" />
+      </div>
+      <div class="field">
+        <label>Author *</label>
+        <input type="text" id="add-author" placeholder="Author name" />
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Year</label>
+          <input type="text" id="add-year" placeholder="e.g. 2019" maxlength="4" />
+        </div>
+        <div class="field">
+          <label>Genre</label>
+          <select id="add-genre">
+            <option value="">— optional —</option>
+            <option>Fiction</option>
+            <option>Non-fiction</option>
+            <option>Children's</option>
+            <option>Mystery</option>
+            <option>Science fiction</option>
+            <option>Biography</option>
+            <option>History</option>
+            <option>Self-help</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <input type="text" id="add-notes" placeholder="Condition, language, donation notes…" />
+      </div>
+      <div style="display:flex; gap:8px; margin-top:1.25rem;">
+        <button class="btn-primary" onclick="addBook()">Add to library</button>
+        <button onclick="clearAddForm()">Clear</button>
+      </div>
+    </div>
+ 
+    <!-- CHECKED OUT -->
+    <div id="tab-checkedout" class="panel">
+      <div class="book-list" id="out-list"><div class="loading">Loading…</div></div>
+    </div>
+  </main>
+</div>
+ 
+<!-- CHECKOUT MODAL -->
+<div id="checkout-modal" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3>Check out book</h3>
+    <div class="modal-subtitle" id="checkout-book-title"></div>
+    <div class="field">
+      <label>Borrower's first name *</label>
+      <input type="text" id="borrower-name" placeholder="First name" onkeydown="if(event.key==='Enter')confirmCheckout()" />
+    </div>
+    <div class="modal-actions">
+      <button onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmCheckout()">Check out</button>
+    </div>
+  </div>
+</div>
+ 
+<div id="toast"></div>
+ 
+<script>
+  // ── Init Supabase ──
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+ 
+  // ── Auth ──
+  function tryLogin() {
+    const val = document.getElementById('pw-input').value;
+    const err = document.getElementById('login-error');
+    if (val === APP_PASSWORD) {
+      sessionStorage.setItem('bscl_auth', '1');
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadAndRender();
+      err.style.display = 'none';
+    } else {
+      err.style.display = 'block';
+      document.getElementById('pw-input').value = '';
+      document.getElementById('pw-input').focus();
+    }
+  }
+ 
+  function signOut() {
+    sessionStorage.removeItem('bscl_auth');
+    location.reload();
+  }
+ 
+  if (sessionStorage.getItem('bscl_auth') === '1') {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  }
+ 
+  // ── State ──
+  let books = [];
+  let currentFilter = 'all';
+  let checkoutBookId = null;
+ 
+  // ── Load ──
+  async function loadAndRender() {
+    const { data, error } = await db.from('books').select('*').order('added_at', { ascending: false });
+    if (error) { toast('Error loading books.'); return; }
+    books = data || [];
+    renderBooks();
+  }
+ 
+  // ── Tabs ──
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+    if (name === 'browse') renderBooks();
+    if (name === 'checkedout') renderCheckedOut();
+  }
+ 
+  function setFilter(f, btn) {
+    currentFilter = f;
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    renderBooks();
+  }
+ 
+  // ── Render browse ──
+  function renderBooks() {
+    const q = (document.getElementById('search-input').value || '').toLowerCase();
+    let filtered = books.filter(b => {
+      const match = !q || b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q);
+      if (!match) return false;
+      if (currentFilter === 'available') return !b.checked_out_name;
+      if (currentFilter === 'out') return !!b.checked_out_name;
+      return true;
+    });
+    document.getElementById('browse-count').textContent =
+      filtered.length + ' book' + (filtered.length !== 1 ? 's' : '');
+    const el = document.getElementById('book-list');
+    if (!filtered.length) {
+      el.innerHTML = '<div class="empty">' + (books.length ? 'No books match your search.' : 'No books yet — add the first one!') + '</div>';
+      return;
+    }
+    el.innerHTML = filtered.map(b => bookCardHTML(b, true)).join('');
+  }
+ 
+  // ── Render checked out ──
+  function renderCheckedOut() {
+    const out = books.filter(b => b.checked_out_name);
+    const el = document.getElementById('out-list');
+    if (!out.length) {
+      el.innerHTML = '<div class="empty">All books are in!</div>';
+      return;
+    }
+    el.innerHTML = out.map(b => {
+      const date = b.checked_out_date ? new Date(b.checked_out_date).toLocaleDateString('en-CA') : '';
+      return `
+        <div class="book-card">
+          <div class="book-icon out">out</div>
+          <div class="book-info">
+            <div class="book-title">${esc(b.title)}</div>
+            <div class="book-author">${esc(b.author)}</div>
+            <div class="book-meta">Checked out by <strong>${esc(b.checked_out_name)}</strong>${date ? ' · ' + date : ''}</div>
+          </div>
+          <div class="book-actions">
+            <button class="btn-sm btn-primary" onclick="returnBook('${b.id}')">Return</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+ 
+  function bookCardHTML(b, showActions) {
+    const out = !!b.checked_out_name;
+    const meta = [b.year, b.genre].filter(Boolean).join(' · ');
+    return `
+      <div class="book-card">
+        <div class="book-icon ${out ? 'out' : ''}">${out ? 'out' : 'in'}</div>
+        <div class="book-info">
+          <div class="book-title">${esc(b.title)}</div>
+          <div class="book-author">${esc(b.author)}</div>
+          ${meta ? `<div class="book-meta">${esc(meta)}</div>` : ''}
+          ${b.notes ? `<div class="book-meta" style="font-style:italic">${esc(b.notes)}</div>` : ''}
+          <div class="book-status">
+            <span class="badge ${out ? 'badge-out' : 'badge-in'}">${out ? 'Out — ' + esc(b.checked_out_name) : 'Available'}</span>
+          </div>
+        </div>
+        ${showActions ? `
+        <div class="book-actions">
+          ${out
+            ? `<button class="btn-sm btn-primary" onclick="returnBook('${b.id}')">Return</button>`
+            : `<button class="btn-sm btn-primary" onclick="openCheckout('${b.id}')">Check out</button>`}
+          <button class="btn-sm btn-danger" onclick="deleteBook('${b.id}')" title="Remove book">✕</button>
+        </div>` : ''}
+      </div>`;
+  }
+ 
+  // ── Add book ──
+  async function addBook() {
+    const title  = document.getElementById('add-title').value.trim();
+    const author = document.getElementById('add-author').value.trim();
+    if (!title || !author) { toast('Please enter a title and author.'); return; }
+    const { data, error } = await db.from('books').insert([{
+      title,
+      author,
+      year:  document.getElementById('add-year').value.trim() || null,
+      genre: document.getElementById('add-genre').value || null,
+      notes: document.getElementById('add-notes').value.trim() || null,
+    }]).select().single();
+    if (error) { toast('Error adding book.'); return; }
+    books.unshift(data);
+    clearAddForm();
+    toast('"' + title + '" added!');
+  }
+ 
+  function clearAddForm() {
+    ['add-title','add-author','add-year','add-notes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('add-genre').value = '';
+  }
+ 
+  // ── Checkout ──
+  function openCheckout(id) {
+    checkoutBookId = id;
+    const b = books.find(b => b.id === id);
+    document.getElementById('checkout-book-title').textContent = b.title + ' by ' + b.author;
+    document.getElementById('borrower-name').value = '';
+    document.getElementById('checkout-modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('borrower-name').focus(), 50);
+  }
+ 
+  function closeModal() {
+    document.getElementById('checkout-modal').style.display = 'none';
+    checkoutBookId = null;
+  }
+ 
+  async function confirmCheckout() {
+    const name = document.getElementById('borrower-name').value.trim();
+    if (!name) { toast('Please enter a name.'); return; }
+    const { error } = await db.from('books').update({
+      checked_out_name: name,
+      checked_out_date: new Date().toISOString()
+    }).eq('id', checkoutBookId);
+    if (error) { toast('Error checking out.'); return; }
+    const b = books.find(b => b.id === checkoutBookId);
+    b.checked_out_name = name;
+    b.checked_out_date = new Date().toISOString();
+    renderBooks();
+    closeModal();
+    toast(name + ' checked out "' + b.title + '"');
+  }
+ 
+  // ── Return ──
+  async function returnBook(id) {
+    const { error } = await db.from('books').update({
+      checked_out_name: null,
+      checked_out_date: null
+    }).eq('id', id);
+    if (error) { toast('Error returning book.'); return; }
+    const b = books.find(b => b.id === id);
+    const title = b.title;
+    b.checked_out_name = null;
+    b.checked_out_date = null;
+    renderBooks();
+    renderCheckedOut();
+    toast('"' + title + '" returned!');
+  }
+ 
+  // ── Delete ──
+  async function deleteBook(id) {
+    const b = books.find(b => b.id === id);
+    if (!confirm('Remove "' + b.title + '" from the library?')) return;
+    const { error } = await db.from('books').delete().eq('id', id);
+    if (error) { toast('Error removing book.'); return; }
+    books = books.filter(b => b.id !== id);
+    renderBooks();
+    toast('Book removed.');
+  }
+ 
+  // ── Helpers ──
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('show'), 2400);
+  }
+ 
+  function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+ 
+  // ── Auto-load if already authenticated ──
+  if (sessionStorage.getItem('bscl_auth') === '1') loadAndRender();
+</script>
+</body>
+</html>
