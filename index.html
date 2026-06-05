@@ -7,9 +7,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500&display=swap');
- 
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
- 
+
   :root {
     --cream: #F7F3EE;
     --paper: #FBF8F4;
@@ -25,7 +25,7 @@
     --red-light: #FAECEC;
     --radius: 6px;
   }
- 
+
   body {
     font-family: 'DM Sans', sans-serif;
     background: var(--cream);
@@ -33,7 +33,7 @@
     min-height: 100vh;
     font-size: 15px;
   }
- 
+
   /* ── Login ── */
   #login-screen {
     min-height: 100vh;
@@ -55,10 +55,10 @@
   .login-box .tagline { font-size: 13px; color: var(--ink-mid); margin-bottom: 2rem; }
   .login-box input { width: 100%; margin-bottom: 12px; text-align: center; letter-spacing: 2px; }
   .login-error { font-size: 13px; color: var(--red); margin-top: 8px; display: none; }
- 
+
   /* ── App shell ── */
   #app { display: none; }
- 
+
   header {
     background: var(--paper);
     border-bottom: 1px solid var(--rule);
@@ -73,9 +73,9 @@
   }
   .header-title { font-family: 'Lora', serif; font-size: 18px; }
   .header-actions { display: flex; gap: 8px; align-items: center; }
- 
+
   main { max-width: 720px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
- 
+
   /* ── Tabs ── */
   .tabs {
     display: flex;
@@ -103,11 +103,11 @@
     font-weight: 500;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   }
- 
+
   /* ── Panels ── */
   .panel { display: none; }
   .panel.active { display: block; }
- 
+
   /* ── Forms ── */
   .field { margin-bottom: 14px; }
   label { display: block; font-size: 12px; font-weight: 500; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
@@ -126,7 +126,7 @@
   input:focus, select:focus, textarea:focus { border-color: var(--green); }
   .row { display: flex; gap: 12px; }
   .row .field { flex: 1; }
- 
+
   /* ── Buttons ── */
   button {
     font-family: 'DM Sans', sans-serif;
@@ -146,12 +146,12 @@
   .btn-sm { padding: 5px 12px; font-size: 13px; }
   .btn-danger { color: var(--red); border-color: transparent; background: none; }
   .btn-danger:hover { background: var(--red-light); }
- 
+
   /* ── Search ── */
   .search-wrap { position: relative; margin-bottom: 12px; }
   .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--ink-light); pointer-events: none; }
   .search-wrap input { padding-left: 34px; }
- 
+
   /* ── Filter pills ── */
   .filters { display: flex; gap: 6px; margin-bottom: 1.25rem; flex-wrap: wrap; }
   .pill {
@@ -163,7 +163,7 @@
     color: var(--ink-mid);
   }
   .pill.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
- 
+
   /* ── Book cards ── */
   .book-list { display: flex; flex-direction: column; gap: 8px; }
   .book-card {
@@ -209,7 +209,7 @@
   .badge-in { background: var(--green-light); color: var(--green); }
   .badge-out { background: var(--amber-light); color: var(--amber); }
   .book-actions { display: flex; gap: 6px; flex-shrink: 0; }
- 
+
   /* ── Empty state ── */
   .empty {
     text-align: center;
@@ -219,10 +219,10 @@
     font-style: italic;
     font-size: 16px;
   }
- 
+
   /* ── Result count ── */
   .result-count { font-size: 13px; color: var(--ink-light); margin-bottom: 12px; }
- 
+
   /* ── Modal ── */
   .modal-backdrop {
     position: fixed;
@@ -245,7 +245,7 @@
   .modal h3 { font-family: 'Lora', serif; font-size: 18px; margin-bottom: 6px; }
   .modal-subtitle { font-size: 13px; color: var(--ink-mid); margin-bottom: 1.25rem; }
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.25rem; }
- 
+
   /* ── Toast ── */
   #toast {
     position: fixed;
@@ -264,13 +264,13 @@
     white-space: nowrap;
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
- 
+
   /* ── Loading ── */
   .loading { text-align: center; padding: 2rem; color: var(--ink-light); font-size: 14px; }
- 
+
   /* ── Divider ── */
   .section-divider { border: none; border-top: 1px solid var(--rule); margin: 1.5rem 0; }
- 
+
   @media (max-width: 480px) {
     .row { flex-direction: column; gap: 0; }
     .book-actions { flex-direction: column; }
@@ -278,14 +278,14 @@
 </style>
 </head>
 <body>
- 
+
 <!-- ── CONFIG ── -->
 <script>
-  const SUPABASE_URL    = 'https://foxabuldkrkkvebzisdd.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_C12H23vTgJqIqtzPin_J_g_2w3KBfrT';
-  const APP_PASSWORD    = 'library';
+  const SUPABASE_URL    = 'YOUR_PROJECT_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+  const APP_PASSWORD    = 'your-password-here';
 </script>
- 
+
 <!-- ── LOGIN ── -->
 <div id="login-screen">
   <div class="login-box">
@@ -298,7 +298,7 @@
     <div class="login-error" id="login-error">Incorrect password — try again.</div>
   </div>
 </div>
- 
+
 <!-- ── APP ── -->
 <div id="app">
   <header>
@@ -307,14 +307,14 @@
       <button class="btn-sm" onclick="signOut()">Sign out</button>
     </div>
   </header>
- 
+
   <main>
     <div class="tabs">
       <button class="tab active" onclick="switchTab('browse', this)">Browse</button>
       <button class="tab" onclick="switchTab('add', this)">Add book</button>
       <button class="tab" onclick="switchTab('checkedout', this)">Checked out</button>
     </div>
- 
+
     <!-- BROWSE -->
     <div id="tab-browse" class="panel active">
       <div class="search-wrap">
@@ -326,10 +326,11 @@
         <button class="pill" onclick="setFilter('available', this)">Available</button>
         <button class="pill" onclick="setFilter('out', this)">Checked out</button>
       </div>
+      <div id="genre-filters" class="filters" style="margin-top:-6px;"></div>
       <div class="result-count" id="browse-count"></div>
       <div class="book-list" id="book-list"><div class="loading">Loading books…</div></div>
     </div>
- 
+
     <!-- ADD -->
     <div id="tab-add" class="panel">
       <div class="field">
@@ -346,15 +347,16 @@
           <input type="text" id="add-year" placeholder="e.g. 2019" maxlength="4" />
         </div>
         <div class="field">
-          <label>Genre *</label>
+          <label>Genre</label>
           <select id="add-genre">
-            <option value="">—</option>
-            <option>General Fiction</option>
-            <option>General Non-fiction</option>
+            <option value="">— optional —</option>
+            <option>Fiction</option>
+            <option>Non-fiction</option>
+            <option>Children's</option>
             <option>Mystery</option>
             <option>Science fiction</option>
-            <option>Romance</option>
             <option>Biography</option>
+            <option>History</option>
             <option>Self-help</option>
             <option>Other</option>
           </select>
@@ -369,14 +371,14 @@
         <button onclick="clearAddForm()">Clear</button>
       </div>
     </div>
- 
+
     <!-- CHECKED OUT -->
     <div id="tab-checkedout" class="panel">
       <div class="book-list" id="out-list"><div class="loading">Loading…</div></div>
     </div>
   </main>
 </div>
- 
+
 <!-- CHECKOUT MODAL -->
 <div id="checkout-modal" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeModal()">
   <div class="modal">
@@ -392,14 +394,14 @@
     </div>
   </div>
 </div>
- 
+
 <div id="toast"></div>
- 
+
 <script>
   // ── Init Supabase ──
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
- 
+
   // ── Auth ──
   function tryLogin() {
     const val = document.getElementById('pw-input').value;
@@ -416,30 +418,48 @@
       document.getElementById('pw-input').focus();
     }
   }
- 
+
   function signOut() {
     sessionStorage.removeItem('bscl_auth');
     location.reload();
   }
- 
+
   if (sessionStorage.getItem('bscl_auth') === '1') {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
   }
- 
+
   // ── State ──
   let books = [];
   let currentFilter = 'all';
+  let currentGenre = '';
   let checkoutBookId = null;
- 
+
   // ── Load ──
   async function loadAndRender() {
     const { data, error } = await db.from('books').select('*').order('added_at', { ascending: false });
     if (error) { toast('Error loading books.'); return; }
     books = data || [];
+    renderGenrePills();
     renderBooks();
   }
- 
+
+  // ── Genre pills ──
+  function renderGenrePills() {
+    const genres = [...new Set(books.map(b => b.genre).filter(Boolean))].sort();
+    const el = document.getElementById('genre-filters');
+    if (!genres.length) { el.innerHTML = ''; return; }
+    el.innerHTML = `<button class="pill genre-pill active" onclick="setGenre('', this)">All genres</button>` +
+      genres.map(g => `<button class="pill genre-pill" onclick="setGenre('${esc(g)}', this)">${esc(g)}</button>`).join('');
+  }
+
+  function setGenre(g, btn) {
+    currentGenre = g;
+    document.querySelectorAll('.genre-pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    renderBooks();
+  }
+
   // ── Tabs ──
   function switchTab(name, btn) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -449,22 +469,23 @@
     if (name === 'browse') renderBooks();
     if (name === 'checkedout') renderCheckedOut();
   }
- 
+
   function setFilter(f, btn) {
     currentFilter = f;
     document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     renderBooks();
   }
- 
+
   // ── Render browse ──
   function renderBooks() {
     const q = (document.getElementById('search-input').value || '').toLowerCase();
     let filtered = books.filter(b => {
       const match = !q || b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q);
       if (!match) return false;
-      if (currentFilter === 'available') return !b.checked_out_name;
-      if (currentFilter === 'out') return !!b.checked_out_name;
+      if (currentFilter === 'available') { if (b.checked_out_name) return false; }
+      if (currentFilter === 'out') { if (!b.checked_out_name) return false; }
+      if (currentGenre && b.genre !== currentGenre) return false;
       return true;
     });
     document.getElementById('browse-count').textContent =
@@ -476,7 +497,7 @@
     }
     el.innerHTML = filtered.map(b => bookCardHTML(b, true)).join('');
   }
- 
+
   // ── Render checked out ──
   function renderCheckedOut() {
     const out = books.filter(b => b.checked_out_name);
@@ -501,7 +522,7 @@
         </div>`;
     }).join('');
   }
- 
+
   function bookCardHTML(b, showActions) {
     const out = !!b.checked_out_name;
     const meta = [b.year, b.genre].filter(Boolean).join(' · ');
@@ -526,7 +547,7 @@
         </div>` : ''}
       </div>`;
   }
- 
+
   // ── Add book ──
   async function addBook() {
     const title  = document.getElementById('add-title').value.trim();
@@ -541,15 +562,16 @@
     }]).select().single();
     if (error) { toast('Error adding book.'); return; }
     books.unshift(data);
+    renderGenrePills();
     clearAddForm();
     toast('"' + title + '" added!');
   }
- 
+
   function clearAddForm() {
     ['add-title','add-author','add-year','add-notes'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('add-genre').value = '';
   }
- 
+
   // ── Checkout ──
   function openCheckout(id) {
     checkoutBookId = id;
@@ -559,12 +581,12 @@
     document.getElementById('checkout-modal').style.display = 'flex';
     setTimeout(() => document.getElementById('borrower-name').focus(), 50);
   }
- 
+
   function closeModal() {
     document.getElementById('checkout-modal').style.display = 'none';
     checkoutBookId = null;
   }
- 
+
   async function confirmCheckout() {
     const name = document.getElementById('borrower-name').value.trim();
     if (!name) { toast('Please enter a name.'); return; }
@@ -580,7 +602,7 @@
     closeModal();
     toast(name + ' checked out "' + b.title + '"');
   }
- 
+
   // ── Return ──
   async function returnBook(id) {
     const { error } = await db.from('books').update({
@@ -596,7 +618,7 @@
     renderCheckedOut();
     toast('"' + title + '" returned!');
   }
- 
+
   // ── Delete ──
   async function deleteBook(id) {
     const b = books.find(b => b.id === id);
@@ -607,7 +629,7 @@
     renderBooks();
     toast('Book removed.');
   }
- 
+
   // ── Helpers ──
   function toast(msg) {
     const el = document.getElementById('toast');
@@ -616,12 +638,12 @@
     clearTimeout(el._t);
     el._t = setTimeout(() => el.classList.remove('show'), 2400);
   }
- 
+
   function esc(s) {
     if (!s) return '';
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
- 
+
   // ── Auto-load if already authenticated ──
   if (sessionStorage.getItem('bscl_auth') === '1') loadAndRender();
 </script>
