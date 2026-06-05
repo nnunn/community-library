@@ -281,9 +281,9 @@
 
 <!-- ── CONFIG ── -->
 <script>
-  const SUPABASE_URL    = 'https://foxabuldkrkkvebzisdd.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_C12H23vTgJqIqtzPin_J_g_2w3KBfrT';
-  const APP_PASSWORD    = 'library-look';
+  const SUPABASE_URL    = 'YOUR_PROJECT_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+  const APP_PASSWORD    = 'your-password-here';
 </script>
 
 <!-- ── LOGIN ── -->
@@ -370,6 +370,20 @@
         <button class="btn-primary" onclick="addBook()">Add to library</button>
         <button onclick="clearAddForm()">Clear</button>
       </div>
+
+      <hr class="section-divider" style="margin-top:2rem;" />
+      <div style="margin-bottom:10px;">
+        <div style="font-size:13px; font-weight:500; color:var(--ink-mid); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Import / Export</div>
+        <div style="font-size:13px; color:var(--ink-light); margin-bottom:1rem;">CSV columns: <code style="font-size:12px; background:var(--cream); padding:1px 5px; border-radius:3px;">title, author, year, genre, notes</code></div>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <label style="all:unset; cursor:pointer;">
+          <span class="btn" style="display:inline-block; padding:8px 16px; font-size:14px;">Import CSV</span>
+          <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(this)" />
+        </label>
+        <button onclick="exportCSV()">Export CSV</button>
+      </div>
+      <div id="import-result" style="margin-top:10px; font-size:13px; display:none;"></div>
     </div>
 
     <!-- CHECKED OUT -->
@@ -628,6 +642,108 @@
     books = books.filter(b => b.id !== id);
     renderBooks();
     toast('Book removed.');
+  }
+
+  // ── Export CSV ──
+  function exportCSV() {
+    const headers = ['title', 'author', 'year', 'genre', 'notes'];
+    const rows = books.map(b =>
+      headers.map(h => {
+        const val = b[h] || '';
+        return '"' + String(val).replace(/"/g, '""') + '"';
+      }).join(',')
+    );
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'boyle-street-library-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    toast('Downloaded ' + books.length + ' books.');
+  }
+
+  // ── Import CSV ──
+  async function importCSV(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) { showImportResult('No data rows found.', false); return; }
+
+    // Parse header
+    const headers = parseCSVRow(lines[0]).map(h => h.trim().toLowerCase());
+    const idx = h => headers.indexOf(h);
+    if (idx('title') === -1 || idx('author') === -1) {
+      showImportResult('CSV must have at least "title" and "author" columns.', false);
+      input.value = '';
+      return;
+    }
+
+    // Build existing set for duplicate check (lowercase title+author)
+    const existing = new Set(books.map(b => b.title.toLowerCase() + '|' + b.author.toLowerCase()));
+
+    const toInsert = [];
+    let skipped = 0;
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      const cols = parseCSVRow(lines[i]);
+      const title  = (cols[idx('title')]  || '').trim();
+      const author = (cols[idx('author')] || '').trim();
+      if (!title || !author) { skipped++; continue; }
+      const key = title.toLowerCase() + '|' + author.toLowerCase();
+      if (existing.has(key)) { skipped++; continue; }
+      existing.add(key);
+      toInsert.push({
+        title,
+        author,
+        year:  idx('year')  >= 0 ? (cols[idx('year')]  || '').trim() || null : null,
+        genre: idx('genre') >= 0 ? (cols[idx('genre')] || '').trim() || null : null,
+        notes: idx('notes') >= 0 ? (cols[idx('notes')] || '').trim() || null : null,
+      });
+    }
+
+    if (!toInsert.length) {
+      showImportResult('No new books to import — ' + skipped + ' skipped (duplicates or missing data).', false);
+      input.value = '';
+      return;
+    }
+
+    const { data, error } = await db.from('books').insert(toInsert).select();
+    if (error) { showImportResult('Error importing: ' + error.message, false); input.value = ''; return; }
+    books = [...(data || []), ...books];
+    renderGenrePills();
+    renderBooks();
+    const msg = 'Imported ' + toInsert.length + ' book' + (toInsert.length !== 1 ? 's' : '') +
+      (skipped ? ' · ' + skipped + ' skipped' : '') + '.';
+    showImportResult(msg, true);
+    input.value = '';
+  }
+
+  function parseCSVRow(line) {
+    const result = [];
+    let cur = '', inQuote = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuote) {
+        if (ch === '"' && line[i+1] === '"') { cur += '"'; i++; }
+        else if (ch === '"') { inQuote = false; }
+        else { cur += ch; }
+      } else {
+        if (ch === '"') { inQuote = true; }
+        else if (ch === ',') { result.push(cur); cur = ''; }
+        else { cur += ch; }
+      }
+    }
+    result.push(cur);
+    return result;
+  }
+
+  function showImportResult(msg, success) {
+    const el = document.getElementById('import-result');
+    el.textContent = msg;
+    el.style.color = success ? 'var(--green)' : 'var(--amber)';
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 5000);
   }
 
   // ── Helpers ──
