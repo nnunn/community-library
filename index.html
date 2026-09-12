@@ -242,9 +242,11 @@
     max-width: 360px;
     border: 1px solid var(--rule);
   }
+  .modal.modal-wide { max-width: 420px; }
   .modal h3 { font-family: 'Lora', serif; font-size: 18px; margin-bottom: 6px; }
   .modal-subtitle { font-size: 13px; color: var(--ink-mid); margin-bottom: 1.25rem; }
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.25rem; }
+  .modal-body { max-height: 60vh; overflow-y: auto; padding-right: 2px; }
 
   /* ── Toast ── */
   #toast {
@@ -285,6 +287,19 @@
   const SUPABASE_ANON_KEY = 'sb_publishable_C12H23vTgJqIqtzPin_J_g_2w3KBfrT';
   const APP_PASSWORD  
     = 'library-look';
+
+  // Genre options — shared between Add and Edit forms
+  const GENRE_OPTIONS = [
+    'General Fiction',
+    'General Non-fiction',
+    'Mystery',
+    'Science fiction',
+    'Graphic Novel',
+    'Romance',
+    'Biography',
+    'Self-help',
+    'Other'
+  ];
 </script>
 <!-- ── LOGIN ── -->
 <div id="login-screen">
@@ -350,15 +365,6 @@
           <label>Genre *</label>
           <select id="add-genre">
             <option value="">— choose the best option —</option>
-            <option>General Fiction</option>
-            <option>General Non-fiction</option>
-            <option>Mystery</option>
-            <option>Science fiction</option>
-            <option>Graphic Novel</option>
-            <option>Romance</option>
-            <option>Biography</option>
-            <option>Self-help</option>
-            <option>Other</option>
           </select>
         </div>
       </div>
@@ -409,12 +415,63 @@
   </div>
 </div>
 
+<!-- EDIT METADATA MODAL -->
+<div id="edit-modal" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal modal-wide">
+    <h3>Edit book details</h3>
+    <div class="modal-subtitle">Update the catalogue information for this book.</div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Title *</label>
+        <input type="text" id="edit-title" placeholder="Book title" />
+      </div>
+      <div class="field">
+        <label>Author *</label>
+        <input type="text" id="edit-author" placeholder="Author name" />
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Year</label>
+          <input type="text" id="edit-year" placeholder="e.g. 2019" maxlength="4" />
+        </div>
+        <div class="field">
+          <label>Genre</label>
+          <select id="edit-genre">
+            <option value="">— choose the best option —</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <input type="text" id="edit-notes" placeholder="Condition, language, donation notes…" />
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button onclick="closeEditModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveEditedBook()">Save changes</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
   // ── Init Supabase ──
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ── Populate genre <select> elements from GENRE_OPTIONS ──
+  function populateGenreSelects() {
+    document.querySelectorAll('#add-genre, #edit-genre').forEach(sel => {
+      GENRE_OPTIONS.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g;
+        opt.textContent = g;
+        sel.appendChild(opt);
+      });
+    });
+  }
+  populateGenreSelects();
 
   // ── Auth ──
   function tryLogin() {
@@ -448,6 +505,7 @@
   let currentFilter = 'all';
   let currentGenre = '';
   let checkoutBookId = null;
+  let editBookId = null;
 
   // ── Load ──
   async function loadAndRender() {
@@ -557,6 +615,7 @@
           ${out
             ? `<button class="btn-sm btn-primary" onclick="returnBook('${b.id}')">Return</button>`
             : `<button class="btn-sm btn-primary" onclick="openCheckout('${b.id}')">Check out</button>`}
+          <button class="btn-sm" onclick="openEditModal('${b.id}')" title="Edit details">Edit</button>
           <button class="btn-sm btn-danger" onclick="deleteBook('${b.id}')" title="Remove book">✕</button>
         </div>` : ''}
       </div>`;
@@ -584,6 +643,52 @@
   function clearAddForm() {
     ['add-title','add-author','add-year','add-notes'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('add-genre').value = '';
+  }
+
+  // ── Edit metadata ──
+  function openEditModal(id) {
+    const b = books.find(b => b.id === id);
+    if (!b) return;
+    editBookId = id;
+    document.getElementById('edit-title').value  = b.title  || '';
+    document.getElementById('edit-author').value = b.author || '';
+    document.getElementById('edit-year').value   = b.year   || '';
+    document.getElementById('edit-genre').value  = b.genre  || '';
+    document.getElementById('edit-notes').value  = b.notes  || '';
+    document.getElementById('edit-modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('edit-title').focus(), 50);
+  }
+
+  function closeEditModal() {
+    document.getElementById('edit-modal').style.display = 'none';
+    editBookId = null;
+  }
+
+  async function saveEditedBook() {
+    if (!editBookId) return;
+    const title  = document.getElementById('edit-title').value.trim();
+    const author = document.getElementById('edit-author').value.trim();
+    if (!title || !author) { toast('Please enter a title and author.'); return; }
+
+    const updates = {
+      title,
+      author,
+      year:  document.getElementById('edit-year').value.trim() || null,
+      genre: document.getElementById('edit-genre').value || null,
+      notes: document.getElementById('edit-notes').value.trim() || null,
+    };
+
+    const { data, error } = await db.from('books').update(updates).eq('id', editBookId).select().single();
+    if (error) { toast('Error saving changes.'); return; }
+
+    const idx = books.findIndex(b => b.id === editBookId);
+    if (idx !== -1) books[idx] = { ...books[idx], ...data };
+
+    renderGenrePills();
+    renderBooks();
+    renderCheckedOut();
+    closeEditModal();
+    toast('"' + title + '" updated!');
   }
 
   // ── Checkout ──
